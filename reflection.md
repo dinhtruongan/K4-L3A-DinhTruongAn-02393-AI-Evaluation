@@ -9,37 +9,37 @@ answer/context trace trong `artifacts/actual_answers.json` trước khi kết lu
 
 ## 1. Benchmark Results Summary
 
-**Overall pass rate:** 40.0% (8 / 20 cases passed: E03, E05, M04, M05, M07, H01, H04, H05)
+**Overall pass rate:** 40.0% (8 / 20 cases passed: E05, M01, M02, M04, M05, M07, H01, H05)
 
 | Metric | Average | Min | Max | Nhận xét |
 |---|---:|---:|---:|---|
-| Context Recall | 0.944 | 0.553 | 1.000 | Rất tốt: Retriever lấy bao phủ hầu như toàn bộ bằng chứng cần thiết cho 19/20 câu hỏi (trừ H03 bị miss chunk exclusions). |
-| Context Precision | 0.914 | 0.679 | 1.000 | Rất tốt: Rank-aware AP@K cao, các chunks chứa bằng chứng liên quan luôn nằm trong top 1-2. |
-| Faithfulness | 0.552 | 0.162 | 1.000 | Yếu: Do mô hình diễn đạt tự nhiên và câu từ chối an toàn dài hơn context trích xuất thô, làm giảm overlap câu đơn lẻ; ca H03 bị hallucination do thiếu chunk. |
-| Relevance | 0.687 | 0.400 | 0.944 | Tốt: Tăng mạnh so với baseline cũ (0.451 -> 0.687) do Llama 3.1 hiểu câu hỏi và trả lời đúng trọng tâm. |
-| Completeness | 0.697 | 0.263 | 1.000 | Khá: Đạt 1.000 ở E01, trên 0.8 ở đa số câu chính sách, chỉ thấp ở ca H03 (0.263) do thiếu vế loại trừ. |
-| Overall Score | 0.646 | 0.359 | 0.828 | Tăng đáng kể so với bản trích xuất thô, phản ánh đúng năng lực tổng hợp ngôn ngữ của neural LLM. |
+| Context Recall | 0.967 | 0.846 | 1.000 | Rất tốt: Retriever lấy bao phủ gần như toàn bộ bằng chứng cần thiết cho 20/20 câu hỏi (H03 đạt 1.000 sau khi tối ưu stemming). |
+| Context Precision | 0.930 | 0.750 | 1.000 | Rất tốt: Rank-aware AP@K cao, các chunks chứa bằng chứng liên quan luôn nằm trong top 1-2. |
+| Faithfulness | 0.567 | 0.118 | 0.917 | Mức trung bình: Câu trả lời bám sát context, điểm giảm ở các câu trả lời mang phong cách hội thoại tự nhiên hoặc từ chối an toàn. |
+| Relevance | 0.610 | 0.133 | 0.944 | Khá: Tăng mạnh so với baseline cũ (0.451 -> 0.610), nhiều câu đạt 0.8–0.9. |
+| Completeness | 0.761 | 0.143 | 1.000 | Rất tốt: Đạt 1.000 ở E01, M01, A01 và > 0.85 ở hầu hết các câu chính sách phức tạp. |
+| Overall Score | 0.646 | 0.131 | 0.881 | Phản ánh chính xác năng lực tổng hợp của mô hình neural LLM trên pipeline RAG. |
 
 **Score interpretation**
 
-- Metrics/cases ở mức Good (0.8–1.0): 8 cases đạt pass (E03, E05, M04, M05, M07, H01, H04, H05) với điểm overall cao nhất là M05 (0.828) và M04 (0.824); Context Recall đạt mức Good ở 19/20 cases; Context Precision đạt mức Good ở 18/20 cases.
-- Metrics/cases ở mức Needs Work (0.6–0.8): 9 cases (E01, E02, E04, M01, M02, M03, M06, H02, H05) có Overall score từ 0.59 đến 0.69, tiệm cận ngưỡng pass 0.70.
-- Metrics/cases ở mức Significant Issues (<0.6): 3 cases thấp nhất gồm A02 (0.359), H03 (0.465), A03 (0.500).
+- Metrics/cases ở mức Good (0.8–1.0): 8 cases đạt pass (E05, M01, M02, M04, M05, M07, H01, H05) với điểm overall cao nhất là H05 (0.881), M04 (0.817) và E05 (0.801); Context Recall đạt mức Good ở 20/20 cases; Context Precision đạt mức Good ở 19/20 cases.
+- Metrics/cases ở mức Needs Work (0.6–0.8): 8 cases (E01, E03, E04, M03, M07, H03, H04, A01) có Overall score từ 0.57 đến 0.72.
+- Metrics/cases ở mức Significant Issues (<0.6): 4 cases thấp nhất gồm A02 (0.131), A03 (0.457), E02 (0.494), M06 (0.548).
 
 **Failure type distribution**
 
 | Failure Type | Count | Percentage |
 |---|---:|---:|
-| off_topic | 10 | 50.0% |
+| off_topic | 9 | 45.0% |
+| irrelevant | 1 | 5.0% |
 | hallucination | 2 | 10.0% |
-| irrelevant | 0 | 0.0% |
 | incomplete | 0 | 0.0% |
 | refusal | 0 | 0.0% |
 
 **Chẩn đoán tổng quan:**
-- **Chất lượng Retrieval:** BM25 retriever hoạt động ổn định với `avg_context_recall` = **0.944** và `avg_context_precision` = **0.914**. Điểm nghẽn retrieval duy nhất xuất hiện ở câu hỏi ghép H03, khi retriever bị lệch trọng số và bỏ sót chunk danh mục loại trừ bảo hành.
-- **Chất lượng Generation:** Llama 3.1 cải thiện vượt bậc về khả năng trả lời đúng câu hỏi (Relevance tăng lên **0.687**, Pass Rate tăng lên **40%**).
-- **Hạn chế của Evaluation Heuristic:** 10 ca bị phân loại `off_topic` chủ yếu do heuristic word-overlap phạt các câu trả lời mang phong cách hội thoại tự nhiên hoặc câu từ chối an toàn tuân thủ scope (A02, A03) khi không lặp lại nguyên văn chuỗi từ khóa của câu hỏi.
+- **Chất lượng Retrieval:** BM25 retriever hoạt động xuất sắc với `avg_context_recall` = **0.967** và `avg_context_precision` = **0.930**. Sau khi cải tiến chuẩn hóa từ vựng (stemming), ca khó H03 đã lấy đủ 100% bằng chứng.
+- **Chất lượng Generation:** Llama 3.1 tạo ra các câu trả lời đầy đủ và chi tiết hơn (Completeness tăng lên **0.761**).
+- **Hạn chế của Evaluation Heuristic:** Các ca bị fail phần lớn rơi vào `off_topic` do heuristic word-overlap yêu cầu trùng lặp chuỗi từ vựng chính xác với câu hỏi, trong khi LLM hành văn linh hoạt và từ chối an toàn các câu hỏi Adversarial (A02, A03).
 
 ---
 
@@ -174,17 +174,17 @@ Paste output của `generate_improvement_log()`:
 | Failure ID | Type | Root Cause | Suggested Fix | Status |
 |------------|------|------------|---------------|--------|
 | E01 | off_topic | Answer does not address the question — improve prompt clarity | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
-| E02 | off_topic | Answer is missing key information — increase context window or improve generation | Add intent classifier and system scope boundaries to reject out-of-domain queries. | Open |
-| E04 | off_topic | Multiple issues detected — review full pipeline | Tune BM25 retrieval hyperparameters (top-k, k1, b) or implement re-ranking to boost context precision. | Open |
-| M01 | off_topic | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
-| M02 | off_topic | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
-| M03 | off_topic | Answer does not address the question — improve prompt clarity | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
-| M06 | off_topic | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
+| E02 | off_topic | Answer does not address the question — improve prompt clarity | Refine prompt instructions and few-shot examples to ensure answers directly address user intent. | Open |
+| E03 | off_topic | Answer does not address the question — improve prompt clarity | Add intent classifier and system scope boundaries to reject out-of-domain queries. | Open |
+| E04 | off_topic | Answer is missing key information — increase context window or improve generation | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
+| M03 | off_topic | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
+| M06 | irrelevant | Answer does not address the question — improve prompt clarity | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
 | H02 | off_topic | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
-| H03 | hallucination | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
-| A01 | hallucination | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
-| A02 | off_topic | Answer is missing key information — increase context window or improve generation | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
-| A03 | off_topic | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
+| H03 | off_topic | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
+| H04 | off_topic | Answer does not address the question — improve prompt clarity | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
+| A01 | off_topic | Answer does not address the question — improve prompt clarity | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
+| A02 | hallucination | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
+| A03 | hallucination | Context is missing or irrelevant — improve retrieval | Implement hallucination checker or factual consistency guardrail to filter unsupported claims. | Open |
 ```
 
 **Ba improvement suggestions ưu tiên**
