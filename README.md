@@ -36,17 +36,19 @@ Hạn nộp mặc định: **23h59 ngày lab (GMT+7)**; coach có thể gia hạ
 
 ## Yêu cầu & Quick Start
 
-**Yêu cầu:** Python 3.11 trở lên. Cần **OpenAI API key** để chạy `domain_assistant.py` (Part 3 — sinh 20 actual answers từ RAG thật); phần code core (`template.py`, Part 1–2) không cần API key.
+**Yêu cầu:** Python 3.11 trở lên. Cần **OpenAI hoặc Gemini API key** để chạy `domain_assistant.py` với LLM thật (Part 3); phần code core (`template.py`, Part 1–2) không cần API key.
 
 ```bash
 python --version                                        # xác nhận Python 3.11+
 python -m venv .venv && source .venv/bin/activate       # Windows: .venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 pytest tests/ -v                                         # baseline: 42 tests collected, 42 failed
-cp .env.example .env                                     # điền OPENAI_API_KEY (chỉ cần cho Part 3)
+cp .env.example .env                                     # điền key của provider được chọn (Part 3)
 ```
 
 Chi tiết hướng dẫn theo hệ điều hành và xử lý lỗi: xem [`guide_lab.md`](guide_lab.md).
+
+Mặc định `LLM_PROVIDER=openai` dùng `OPENAI_API_KEY` và `OPENAI_MODEL`. Để dùng Gemini, đặt `LLM_PROVIDER=gemini`, điền `GEMINI_API_KEY` và chọn `GEMINI_MODEL` trong `.env`. Không cần đổi tên hay xóa các biến OpenAI hiện có. Nếu không có key, generator chạy offline và artifact ghi `provider=offline`; lỗi API khi đã cấu hình key sẽ dừng run để tránh gắn nhãn model sai.
 
 ---
 

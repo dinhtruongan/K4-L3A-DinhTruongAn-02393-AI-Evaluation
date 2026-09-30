@@ -11,9 +11,9 @@ Tài liệu này định nghĩa 6 mốc tiến độ (Checkpoints CP0–CP5) tro
 | **CP0** Setup | Start + 0–15m | 14:15–14:30 | Môi trường, `.env`, baseline tests | 42 failed baseline |
 | **CP1** Data Models | Start + 15–30m | 14:30–14:45 | Task 1: `QAPair`, `EvalResult`, `overall_score` | 3 passed |
 | **CP2** Metrics | Start + 30–65m | 14:45–15:20 | Task 2–3: RAGAS metrics & LLMJudge | 21 passed, 20 failed, 1 skipped |
-| **CP3** Runner & Analyzer | Start + 65–85m | 15:20–15:40 | Task 4–5: BenchmarkRunner, FailureAnalyzer | 41 passed, 1 skipped (full suite) |
+| **CP3** Runner & Analyzer | Start + 65–85m | 15:20–15:40 | Task 4–5: BenchmarkRunner, FailureAnalyzer | 41 passed, 1 skipped; 42 passed nếu làm bonus |
 | **CP4** Dataset & Benchmark | Start + 85–140m | 15:40–16:35 | 20 QA golden dataset, RAG run, Exercise 3.2 & 3.3 | Validator PASS, artifacts generated |
-| **CP5** Reflection & Finalize | Start + 140–165m | 16:35–17:00 | `reflection.md`, copy `solution/solution.py`, kiểm tra cuối | 41 passed, validator PASS, clean repo |
+| **CP5** Reflection & Finalize | Start + 140–165m | 16:35–17:00 | `reflection.md`, copy `solution/solution.py`, kiểm tra cuối | 41 passed, 1 skipped hoặc 42 passed với bonus; validator PASS |
 
 ---
 
@@ -24,7 +24,7 @@ Tài liệu này định nghĩa 6 mốc tiến độ (Checkpoints CP0–CP5) tro
 - **Sản phẩm:**
   - Virtual environment `.venv` đã được tạo và kích hoạt.
   - Toàn bộ dependencies trong `requirements.txt` đã được cài đặt.
-  - File `.env` được tạo từ `.env.example` (điền `OPENAI_API_KEY` cho Part 3).
+  - File `.env` được tạo từ `.env.example` (điền key OpenAI hoặc Gemini cho Part 3).
 - **Cần hiểu:**
   - Cấu trúc thư mục của repository và vai trò của từng module: `template.py` (evaluation engine) vs `domain_assistant.py` (system under evaluation).
   - Tình trạng khởi đầu của starter code: 42 tests được thu thập và 42 tests failed (do các TODO chưa được implement).

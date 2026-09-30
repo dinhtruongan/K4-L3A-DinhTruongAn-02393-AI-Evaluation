@@ -297,11 +297,25 @@ class OfflineGenerator:
 class OpenAIGenerator:
     def __init__(self, max_output_tokens: int = 300) -> None:
         use_offline = os.getenv("USE_OFFLINE", "").strip().lower() in ("1", "true", "yes")
-        api_key = os.getenv("OPENAI_API_KEY", "").strip() if not use_offline else ""
-        self.model = os.getenv("OPENAI_MODEL", "").strip() or "offline-bm25-rag-agent"
-        base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
+        provider = os.getenv("LLM_PROVIDER", "openai").strip().lower()
+        if provider not in ("openai", "gemini"):
+            raise ValueError("LLM_PROVIDER must be 'openai' or 'gemini'")
+        if provider == "gemini":
+            api_key = os.getenv("GEMINI_API_KEY", "").strip()
+            model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
+            base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+        else:
+            api_key = os.getenv("OPENAI_API_KEY", "").strip()
+            model = os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip()
+            base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
+            if base_url and "generativelanguage.googleapis.com" in base_url:
+                provider = "gemini"
+        self.model = "offline-bm25-rag-agent" if use_offline or not api_key else model
+        self.provider = "offline" if use_offline or not api_key else provider
+        if use_offline:
+            api_key = ""
         self.client = (
-            OpenAI(api_key=api_key, base_url=base_url, max_retries=0, timeout=60.0)
+            OpenAI(api_key=api_key, base_url=base_url, max_retries=2, timeout=60.0)
             if api_key
             else None
         )
@@ -310,7 +324,7 @@ class OpenAIGenerator:
         self._offline_fallback = OfflineGenerator()
 
     def generate(self, prompt: str) -> str:
-        if self.client is None or not self.model:
+        if self.client is None:
             return self._offline_fallback.generate(prompt)
         try:
             if not self.base_url:
@@ -336,11 +350,8 @@ class OpenAIGenerator:
             if not answer:
                 raise RuntimeError("LLM returned an empty answer")
             return answer
-            if not answer:
-                raise RuntimeError("OpenAI returned an empty answer")
-            return answer
-        except Exception:
-            return self._offline_fallback.generate(prompt)
+        except Exception as exc:
+            raise RuntimeError(f"{self.provider} generation failed: {exc}") from exc
 
 
 @dataclass(frozen=True)
@@ -466,6 +477,7 @@ def generate_actual_answers(
     generator: TextGenerator | None = None,
     top_k: int = 5,
     progress: ProgressCallback | None = None,
+    checkpoint_path: str | Path | None = None,
 ) -> dict[str, Any]:
     """Generate the auditable actual-answer artifact for all dataset questions."""
 
@@ -492,7 +504,30 @@ def generate_actual_answers(
     )
 
     answers: list[dict[str, Any]] = []
+    checkpoint_file = Path(checkpoint_path) if checkpoint_path is not None else None
+    if checkpoint_file is not None and checkpoint_file.is_file():
+        saved = json.loads(checkpoint_file.read_text(encoding="utf-8"))
+        previous = saved.get("answers", [])
+        if (
+            saved.get("corpus_id") == assistant.corpus_id
+            and saved.get("agent", {}).get("model") == model
+            and saved.get("agent", {}).get("provider") == getattr(assistant.generator, "provider", "custom")
+            and isinstance(previous, list)
+            and all(
+                isinstance(answer, dict)
+                and answer.get("id") == questions[index]["id"]
+                and answer.get("question") == questions[index]["question"]
+                for index, answer in enumerate(previous)
+                if index < total
+            )
+            and len(previous) <= total
+        ):
+            answers = previous
+            notify(f"Resuming {len(answers)}/{total} saved answers")
+    last_request_at: float | None = None
     for index, item in enumerate(questions, start=1):
+        if index <= len(answers):
+            continue
         percentage = index / total
         completed_before = index - 1
         filled_before = round(20 * completed_before / total)
@@ -505,6 +540,10 @@ def generate_actual_answers(
             f"{item['id']} generating: {question_preview}"
         )
 
+        # Gemini free-tier projects can allow only five requests per minute.
+        if getattr(assistant.generator, "provider", None) == "gemini" and last_request_at is not None:
+            time.sleep(max(0.0, 15.0 - (time.monotonic() - last_request_at)))
+        last_request_at = time.monotonic()
         started_at = time.perf_counter()
         try:
             response = assistant.answer_with_trace(item["question"])
@@ -529,6 +568,23 @@ def generate_actual_answers(
                 "error": None,
             }
         )
+        if checkpoint_file is not None:
+            checkpoint_file.parent.mkdir(parents=True, exist_ok=True)
+            checkpoint_file.write_text(
+                json.dumps(
+                    {
+                        "corpus_id": assistant.corpus_id,
+                        "agent": {
+                            "model": model,
+                            "provider": getattr(assistant.generator, "provider", "custom"),
+                        },
+                        "answers": answers,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ) + "\n",
+                encoding="utf-8",
+            )
 
         filled_after = round(20 * percentage)
         bar_after = "#" * filled_after + "-" * (20 - filled_after)
@@ -545,6 +601,7 @@ def generate_actual_answers(
         "agent": {
             "name": "domain-assistant",
             "model": model,
+            "provider": getattr(assistant.generator, "provider", "custom"),
             "top_k": top_k,
             "prompt_version": "1.0",
         },
@@ -586,6 +643,7 @@ def main() -> int:
             args.corpus_dir,
             top_k=args.top_k,
             progress=lambda message: print(message, flush=True),
+            checkpoint_path=args.output.with_suffix(".partial.json"),
         )
         output = args.output.expanduser().resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -594,6 +652,7 @@ def main() -> int:
             json.dumps(artifact, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
+        args.output.with_suffix(".partial.json").unlink(missing_ok=True)
     except (OSError, OpenAIError, TypeError, ValueError, RuntimeError) as exc:
         print(f"ERROR: {exc}")
         return 2
