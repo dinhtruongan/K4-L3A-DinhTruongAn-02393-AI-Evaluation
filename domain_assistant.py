@@ -296,10 +296,11 @@ class OpenAIGenerator:
         self.model = os.getenv("OPENAI_MODEL", "").strip() or "offline-bm25-rag-agent"
         base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
         self.client = (
-            OpenAI(api_key=api_key, base_url=base_url, max_retries=0, timeout=3.0)
+            OpenAI(api_key=api_key, base_url=base_url, max_retries=0, timeout=60.0)
             if api_key
             else None
         )
+        self.base_url = base_url
         self.max_output_tokens = max_output_tokens
         self._offline_fallback = OfflineGenerator()
 
@@ -307,22 +308,29 @@ class OpenAIGenerator:
         if self.client is None or not self.model:
             return self._offline_fallback.generate(prompt)
         try:
-            try:
-                response = self.client.responses.create(
-                    model=self.model,
-                    input=prompt,
-                    temperature=0,
-                    max_output_tokens=self.max_output_tokens,
-                )
-                answer = response.output_text.strip()
-            except Exception:
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0,
-                    max_tokens=self.max_output_tokens,
-                )
-                answer = response.choices[0].message.content.strip()
+            if not self.base_url:
+                try:
+                    response = self.client.responses.create(
+                        model=self.model,
+                        input=prompt,
+                        temperature=0,
+                        max_output_tokens=self.max_output_tokens,
+                    )
+                    answer = response.output_text.strip()
+                    if answer:
+                        return answer
+                except Exception:
+                    pass
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0,
+                max_tokens=self.max_output_tokens,
+            )
+            answer = response.choices[0].message.content.strip()
+            if not answer:
+                raise RuntimeError("LLM returned an empty answer")
+            return answer
             if not answer:
                 raise RuntimeError("OpenAI returned an empty answer")
             return answer
