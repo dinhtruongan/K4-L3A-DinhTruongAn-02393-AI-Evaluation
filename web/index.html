@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OrbitTech AI Support & Evaluation Suite</title>
+  <meta name="description" content="Giao diện thử nghiệm và dashboard đánh giá hệ thống RAG OrbitTech Support." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-base: #080c14;
+      --bg-surface: #0f172a;
+      --bg-card: rgba(23, 32, 54, 0.75);
+      --bg-card-hover: rgba(30, 41, 69, 0.9);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(99, 102, 241, 0.3);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --cyan: #06b6d4;
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --rose-glow: rgba(244, 63, 94, 0.25);
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      background-image:
+        radial-gradient(at 10% 15%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+        radial-gradient(at 90% 85%, rgba(6, 182, 212, 0.08) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.5) 0px, transparent 100%);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header & Navigation */
+    header {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 0.85rem 1.5rem;
+    }
+
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--cyan));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      color: white;
+    }
+
+    .brand-text h1 {
+      font-family: var(--font-heading);
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .brand-text p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--emerald);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .model-tag {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid var(--border-accent);
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      color: #c7d2fe;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.25rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 10px var(--primary-glow);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1400px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+      flex: 1;
+      width: 100%;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Glass Cards */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #fff;
+    }
+
+    /* TAB 1: RAG Assistant Layout */
+    .rag-grid {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .rag-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Filter Pills */
+    .pills-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .pill {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pill:hover, .pill.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--primary);
+      color: #c7d2fe;
+    }
+
+    .sample-select {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.55rem 0.85rem;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .sample-select:focus {
+      border-color: var(--primary);
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+    }
+
+    .input-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    textarea.query-input {
+      width: 100%;
+      min-height: 110px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.85rem;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      resize: vertical;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    textarea.query-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    .param-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+    }
+
+    .slider-container input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .slider-val {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--cyan);
+      min-width: 20px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), #4338ca);
+      border: none;
+      border-radius: 10px;
+      padding: 0.85rem;
+      color: white;
+      font-family: var(--font-heading);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      box-shadow: 0 4px 15px var(--primary-glow);
+      transition: all 0.2s;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Output Section */
+    .output-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .answer-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .answer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .answer-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .answer-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .answer-text {
+      font-size: 0.95rem;
+      color: #f1f5f9;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .answer-text.empty {
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    /* Realtime Eval Banner */
+    .eval-banner {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+    }
+
+    .eval-banner-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .metrics-bar-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .metric-gauge {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-subtle);
+      padding: 0.55rem 0.65rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .gauge-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .gauge-val {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Chunks Accordion */
+    .chunks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .chunk-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .chunk-card.active {
+      border-color: var(--border-accent);
+    }
+
+    .chunk-header {
+      padding: 0.65rem 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .chunk-header:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .chunk-doc {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .rank-pill {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .bm25-score {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--cyan);
+      background: rgba(6, 182, 212, 0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .chunk-body {
+      padding: 0.85rem 1rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.2);
+      line-height: 1.6;
+      display: none;
+    }
+
+    .chunk-body.show {
+      display: block;
+    }
+
+    /* TAB 2: Benchmark Dashboard */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--cyan));
+    }
+
+    .kpi-card.emerald::before { background: var(--emerald); }
+    .kpi-card.cyan::before { background: var(--cyan); }
+    .kpi-card.amber::before { background: var(--amber); }
+
+    .kpi-title {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .kpi-value {
+      font-family: var(--font-heading);
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0.35rem 0 0.2rem 0;
+    }
+
+    .kpi-sub {
+      font-size: 0.74rem;
+      color: var(--text-dim);
+    }
+
+    /* Filters Bar */
+    .table-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .search-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.45rem 0.85rem;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      min-width: 280px;
+      outline: none;
+    }
+
+    .search-box:focus {
+      border-color: var(--primary);
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .select-sm {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.45rem 0.75rem;
+      color: var(--text-main);
+      font-size: 0.82rem;
+      outline: none;
+    }
+
+    /* Benchmark Table */
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+    }
+
+    table.benchmark-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    table.benchmark-tbl th {
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+    }
+
+    table.benchmark-tbl td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+      vertical-align: middle;
+    }
+
+    table.benchmark-tbl tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-easy { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-medium { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-hard { background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.3); }
+    .badge-adv { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+
+    .badge-pass { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .badge-fail { background: rgba(244, 63, 94, 0.2); color: #f43f5e; }
+
+    .btn-detail {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid var(--border-accent);
+      color: #c7d2fe;
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-detail:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* TAB 3: Failure Analysis & 5 Whys */
+    .whys-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .whys-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .why-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px dashed var(--border-subtle);
+    }
+
+    .why-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      font-weight: 700;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .why-content h4 {
+      font-size: 0.85rem;
+      color: #f1f5f9;
+      margin-bottom: 0.2rem;
+    }
+
+    .why-content p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      max-width: 860px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 1.75rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .modal-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      margin-bottom: 0.35rem;
+      font-weight: 600;
+    }
+
+    .modal-text {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.85rem;
+      font-size: 0.88rem;
+      color: #f1f5f9;
+      line-height: 1.6;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>OrbitTech AI • Support & Evaluation Studio</h1>
+          <p>Production RAG Pipeline & Golden Dataset Benchmarking</p>
+        </div>
+      </div>
+
+      <nav class="nav-tabs">
+        <button class="tab-btn active" id="tabBtnChat" onclick="switchTab('chat')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          Trợ lý RAG & Trace
+        </button>
+        <button class="tab-btn" id="tabBtnBenchmark" onclick="switchTab('benchmark')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          Benchmark Dashboard
+        </button>
+        <button class="tab-btn" id="tabBtnWhys" onclick="switchTab('whys')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+          5 Whys & Root Cause
+        </button>
+      </nav>
+
+      <div class="header-status">
+        <span class="model-tag" id="headerModelTag">Đang tải model</span>
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span id="headerCorpusStatus">Corpus: 51 Chunks</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+
+    <!-- TAB 1: RAG CHAT & TRACE INSPECTOR -->
+    <div id="tabChat" class="tab-content active">
+      <div class="rag-grid">
+        <!-- Left: Question Input & Presets -->
+        <div class="card">
+          <h2 class="card-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Truy vấn Khách hàng
+          </h2>
+
+          <div class="input-label">
+            <span>Chọn mẫu câu hỏi từ Golden Dataset (20 QA):</span>
+          </div>
+
+          <div class="pills-container">
+            <button class="pill active" onclick="filterSampleCategory('all')">Tất cả (20)</button>
+            <button class="pill" onclick="filterSampleCategory('easy')">Dễ (5)</button>
+            <button class="pill" onclick="filterSampleCategory('medium')">Trung bình (7)</button>
+            <button class="pill" onclick="filterSampleCategory('hard')">Khó (5)</button>
+            <button class="pill" onclick="filterSampleCategory('adversarial')">Adversarial (3)</button>
+          </div>
+
+          <select id="sampleSelect" class="sample-select" onchange="onSelectSample()">
+            <option value="">-- Chọn một câu hỏi mẫu --</option>
+          </select>
+
+          <div class="input-group">
+            <div class="input-label">
+              <span>Nội dung câu hỏi (Question):</span>
+              <span id="charCount" style="font-family: var(--font-mono); font-size: 0.72rem;">0 ký tự</span>
+            </div>
+            <textarea id="queryInput" class="query-input" placeholder="Nhập câu hỏi hỗ trợ khách hàng OrbitTech (hoặc chọn câu mẫu phía trên)..."></textarea>
+          </div>
+
+          <div class="param-row">
+            <div class="slider-container">
+              <span class="input-label" style="margin-bottom:0;">Top-K Chunks:</span>
+              <input type="range" id="topKSlider" min="1" max="8" value="5" oninput="document.getElementById('topKVal').innerText = this.value" />
+              <span class="slider-val" id="topKVal">5</span>
+            </div>
+          </div>
+
+          <button id="btnSubmit" class="btn-submit" onclick="executeRAG()">
+            <span id="btnSubmitText">Truy xuất & Trả lời (RAG)</span>
+            <span id="btnSubmitSpinner" class="spinner" style="display:none;"></span>
+          </button>
+        </div>
+
+        <!-- Right: Answers & Trace Chunks -->
+        <div class="output-column">
+          <!-- Live Answer Box -->
+          <div class="card">
+            <div class="answer-header">
+              <h2 class="card-title" style="margin-bottom: 0;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Câu trả lời từ Trợ lý OrbitTech
+              </h2>
+              <div class="answer-meta">
+                <span id="metaModel">Model: đang tải</span>
+                <span>•</span>
+                <span id="metaLatency">Thời gian: -- ms</span>
+              </div>
+            </div>
+
+            <div id="answerContent" class="answer-text empty">
+              Vui lòng chọn hoặc nhập câu hỏi bên trái và bấm "Truy xuất & Trả lời (RAG)" để bắt đầu.
+            </div>
+          </div>
+
+          <!-- Real-time Evaluation Card (Visible when evaluated) -->
+          <div id="evalCard" class="card eval-banner" style="display: none;">
+            <div class="eval-banner-top">
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="font-weight: 600; font-size: 0.9rem; color: #fff;">Đánh giá Benchmark tức thời:</span>
+                <span id="evalPassBadge" class="badge badge-pass">PASS</span>
+                <span id="evalFailureTag" class="badge badge-fail" style="display: none;">OFF_TOPIC</span>
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-dim);">
+                Khớp với Golden Item: <strong id="evalMatchedId" style="color: var(--cyan);">E01</strong>
+              </div>
+            </div>
+
+            <div class="metrics-bar-grid">
+              <div class="metric-gauge">
+                <div class="gauge-label">Recall (Retrieval)</div>
+                <div id="gaugeRecall" class="gauge-val" style="color: var(--emerald);">0.95</div>
+              </div>
+              <div class="metric-gauge">
+                <div class="gauge-label">Precision (AP@K)</div>
+                <div id="gaugePrecision" class="gauge-val" style="color: var(--emerald);">1.00</div>
+              </div>
+              <div class="metric-gauge">
+                <div class="gauge-label">Faithfulness</div>
+                <div id="gaugeFaith" class="gauge-val" style="color: var(--cyan);">0.75</div>
+              </div>
+              <div class="metric-gauge">
+                <div class="gauge-label">Relevance</div>
+                <div id="gaugeRel" class="gauge-val" style="color: var(--amber);">0.60</div>
+              </div>
+              <div class="metric-gauge">
+                <div class="gauge-label">Completeness</div>
+                <div id="gaugeComp" class="gauge-val" style="color: #a78bfa;">0.85</div>
+              </div>
+              <div class="metric-gauge">
+                <div class="gauge-label">Overall Score</div>
+                <div id="gaugeOverall" class="gauge-val" style="color: #fff;">0.73</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Retrieved Contexts Inspector -->
+          <div class="card">
+            <h2 class="card-title">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+              </svg>
+              Retrieved Contexts Trace (Top BM25 Chunks)
+            </h2>
+            <div id="chunksContainer" class="chunks-list">
+              <div style="font-size: 0.85rem; color: var(--text-dim); padding: 0.5rem 0;">
+                Chưa có văn bản truy xuất.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: BENCHMARK DASHBOARD -->
+    <div id="tabBenchmark" class="tab-content">
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card emerald">
+          <div class="kpi-title">Pass Rate (Overall >= 0.6)</div>
+          <div id="kpiPassRate" class="kpi-value">40.0%</div>
+          <div id="kpiPassCount" class="kpi-sub">8 / 20 Test Cases Đạt Chuẩn</div>
+        </div>
+        <div class="kpi-card cyan">
+          <div class="kpi-title">Context Recall (Retrieval)</div>
+          <div id="kpiRecall" class="kpi-value">96.7%</div>
+          <div class="kpi-sub">Bao phủ thông tin mục tiêu</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Context Precision (AP@K)</div>
+          <div id="kpiPrecision" class="kpi-value">93.0%</div>
+          <div class="kpi-sub">Xếp hạng chunk liên quan đầu danh sách</div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-title">Completeness (Đầy đủ)</div>
+          <div id="kpiCompleteness" class="kpi-value">76.8%</div>
+          <div class="kpi-sub">Tỷ lệ bao phủ keyword expected</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Faithfulness (Trung thực)</div>
+          <div id="kpiFaithfulness" class="kpi-value">68.7%</div>
+          <div class="kpi-sub">0% Ảo giác (Hallucination)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Answer Relevance</div>
+          <div id="kpiRelevance" class="kpi-value">48.9%</div>
+          <div class="kpi-sub">Độ trùng khớp từ vựng câu hỏi</div>
+        </div>
+      </div>
+
+      <!-- Table Toolbar -->
+      <div class="table-toolbar">
+        <input type="text" id="tableSearch" class="search-box" placeholder="Tìm kiếm theo ID, nội dung câu hỏi..." oninput="applyFilters()" />
+
+        <div class="filter-group">
+          <select id="filterDifficulty" class="select-sm" onchange="applyFilters()">
+            <option value="all">Tất cả mức độ</option>
+            <option value="easy">Dễ (Easy)</option>
+            <option value="medium">Trung bình (Medium)</option>
+            <option value="hard">Khó (Hard)</option>
+            <option value="adversarial">Adversarial</option>
+          </select>
+
+          <select id="filterStatus" class="select-sm" onchange="applyFilters()">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="passed">Đạt (Passed)</option>
+            <option value="failed">Chưa đạt (Failed)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="table-responsive">
+        <table class="benchmark-tbl">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Mức độ</th>
+              <th>Câu hỏi</th>
+              <th>Recall</th>
+              <th>Precision</th>
+              <th>Faithfulness</th>
+              <th>Relevance</th>
+              <th>Completeness</th>
+              <th>Overall</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="benchmarkTableBody">
+            <tr>
+              <td colspan="11" style="text-align:center; padding: 2rem;">Đang tải dữ liệu benchmark...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: 5 WHYS & FAILURE ANALYSIS -->
+    <div id="tabWhys" class="tab-content">
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h2 class="card-title">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          Phân bố Lỗi & Cơ chế Phản chiếu (Failure Taxonomy)
+        </h2>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6;">
+          Trên bộ Golden Dataset 20 câu hỏi đánh giá thực tế của hệ thống OrbitTech RAG, tỷ lệ <strong>Ảo giác (Hallucination) = 0</strong> (100% câu trả lời đều bám sát sự thật tài liệu). Các ca chưa đạt chuẩn tập trung vào <strong>10 ca Off-topic</strong> và <strong>2 ca Irrelevant</strong> do sai lệch giữa phương pháp đo lường từ vựng (lexical metric) và khả năng diễn đạt tự nhiên của LLM.
+        </p>
+      </div>
+
+      <div class="whys-grid">
+        <!-- Root Cause 1 -->
+        <div class="card">
+          <h3 class="card-title" style="font-size: 0.95rem; color: #a5b4fc;">
+            🔍 Ca 1: Sai lệch Từ vựng Đo lường Relevance (Lexical Penalty)
+          </h3>
+          <div class="why-step">
+            <div class="why-num">1</div>
+            <div class="why-content">
+              <h4>Tại sao câu trả lời đúng bản chất nhưng điểm Relevance thấp?</h4>
+              <p>Mô hình LLM diễn đạt súc tích, chỉ trả lời thẳng vào sự thật cần tìm thay vì lặp lại toàn bộ câu hỏi.</p>
+            </div>
+          </div>
+          <div class="why-step">
+            <div class="why-num">2</div>
+            <div class="why-content">
+              <h4>Tại sao việc trả lời thẳng lại bị trừ điểm?</h4>
+              <p>Hàm <code>evaluate_relevance</code> tính theo tỷ lệ trùng khớp token giữa answer và question (|answer ∩ question| / |question|).</p>
+            </div>
+          </div>
+          <div class="why-step">
+            <div class="why-num">3</div>
+            <div class="why-content">
+              <h4>Tại sao câu hỏi chứa nhiều từ không xuất hiện trong câu trả lời?</h4>
+              <p>Câu hỏi chứa các từ nghi vấn, điều kiện ngữ cảnh ("under what order status", "how much does it cost").</p>
+            </div>
+          </div>
+          <div class="why-step">
+            <div class="why-num">4</div>
+            <div class="why-content">
+              <h4>Giải pháp khắc phục là gì?</h4>
+              <p>Chuyển đổi sang <strong>LLM-as-a-Judge</strong> chấm theo Rubric ngữ nghĩa (1-5 sao) hoặc Embedding Cosine Similarity.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Root Cause 2 -->
+        <div class="card">
+          <h3 class="card-title" style="font-size: 0.95rem; color: #67e8f9;">
+            🛡️ Ca 2: Bảo vệ An toàn Adversarial Guardrails (Jailbreak / Prompt Leak)
+          </h3>
+          <div class="why-step">
+            <div class="why-num">1</div>
+            <div class="why-content">
+              <h4>Tại sao các câu Adversarial (A01-A03) không bị bẻ khóa?</h4>
+              <p>System Prompt được trang bị Guardrail rõ ràng, từ chối tiết lộ prompt ẩn và từ chối can thiệp hệ thống nội bộ.</p>
+            </div>
+          </div>
+          <div class="why-step">
+            <div class="why-num">2</div>
+            <div class="why-content">
+              <h4>Tại sao điểm completeness của câu A01 lại dưới 1.0?</h4>
+              <p>LLM dùng văn phong từ chối lịch sự ("I cannot assist with..."), khác biệt từ vựng với mẫu từ chối cố định trong ground truth.</p>
+            </div>
+          </div>
+          <div class="why-step">
+            <div class="why-num">3</div>
+            <div class="why-content">
+              <h4>Đánh giá mức độ an toàn thực tế:</h4>
+              <p>Hệ thống đạt <strong>100% Defense Success Rate</strong> trước các tấn công Jailbreak và Prompt Extraction.</p>
+            </div>
+          </div>
+          <div class="why-step">
+            <div class="why-num">4</div>
+            <div class="why-content">
+              <h4>Đề xuất hoàn thiện:</h4>
+              <p>Tách riêng metric đánh giá An toàn (Safety / Refusal Alignment) thay vì dùng chung metric Task Completeness thông thường.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Detail Modal -->
+  <div id="detailModal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModalDirect()">&times;</button>
+
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+        <span id="mId" style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--cyan);">E01</span>
+        <span id="mDifficulty" class="badge badge-easy">EASY</span>
+        <span id="mStatus" class="badge badge-pass">PASSED</span>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-label">Câu hỏi (Question):</div>
+        <div id="mQuestion" class="modal-text" style="font-weight: 500;"></div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-label" style="color: #34d399;">Câu trả lời chuẩn (Golden Ground Truth):</div>
+        <div id="mExpected" class="modal-text"></div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-label" style="color: #60a5fa;">Câu trả lời thực tế từ model đã cấu hình:</div>
+        <div id="mActual" class="modal-text"></div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-label">Điểm số chi tiết (Metrics Breakdown):</div>
+        <div class="metrics-bar-grid">
+          <div class="metric-gauge">
+            <div class="gauge-label">Recall</div>
+            <div id="mRecall" class="gauge-val">0.00</div>
+          </div>
+          <div class="metric-gauge">
+            <div class="gauge-label">Precision</div>
+            <div id="mPrecision" class="gauge-val">0.00</div>
+          </div>
+          <div class="metric-gauge">
+            <div class="gauge-label">Faithfulness</div>
+            <div id="mFaith" class="gauge-val">0.00</div>
+          </div>
+          <div class="metric-gauge">
+            <div class="gauge-label">Relevance</div>
+            <div id="mRel" class="gauge-val">0.00</div>
+          </div>
+          <div class="metric-gauge">
+            <div class="gauge-label">Completeness</div>
+            <div id="mComp" class="gauge-val">0.00</div>
+          </div>
+          <div class="metric-gauge">
+            <div class="gauge-label">Overall</div>
+            <div id="mOverall" class="gauge-val">0.00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    let questionsData = [];
+    let benchmarkData = null;
+    let selectedExpectedAnswer = "";
+    let activeCategory = "all";
+
+    // Initialize application
+    async function initApp() {
+      await loadStatus();
+      await loadQuestions();
+      await loadBenchmark();
+    }
+
+    async function loadStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        document.getElementById('headerModelTag').innerText = data.model || 'Không rõ model';
+        document.getElementById('metaModel').innerText = `Model: ${data.model || 'không rõ'}`;
+        document.getElementById('headerCorpusStatus').innerText = `Corpus: ${data.total_chunks} Chunks`;
+      } catch (err) {
+        console.error("Lỗi khi nạp status:", err);
+      }
+    }
+
+    async function loadQuestions() {
+      try {
+        const res = await fetch('/api/questions');
+        questionsData = await res.json();
+        renderSampleOptions();
+      } catch (err) {
+        console.error("Lỗi nạp questions:", err);
+      }
+    }
+
+    function renderSampleOptions() {
+      const select = document.getElementById('sampleSelect');
+      select.innerHTML = '<option value="">-- Chọn một câu hỏi mẫu --</option>';
+
+      const filtered = activeCategory === 'all'
+        ? questionsData
+        : questionsData.filter(q => q.difficulty.toLowerCase() === activeCategory);
+
+      filtered.forEach(q => {
+        const opt = document.createElement('option');
+        opt.value = q.id;
+        opt.textContent = `[${q.id} - ${q.difficulty.toUpperCase()}] ${q.question.substring(0, 65)}...`;
+        select.appendChild(opt);
+      });
+    }
+
+    function filterSampleCategory(cat) {
+      activeCategory = cat;
+      document.querySelectorAll('.pills-container .pill').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.toLowerCase().includes(cat) || (cat === 'all' && btn.innerText.includes('Tất cả')));
+      });
+      renderSampleOptions();
+    }
+
+    function onSelectSample() {
+      const qid = document.getElementById('sampleSelect').value;
+      if (!qid) return;
+      const item = questionsData.find(q => q.id === qid);
+      if (item) {
+        document.getElementById('queryInput').value = item.question;
+        selectedExpectedAnswer = item.expected_answer;
+        updateCharCount();
+      }
+    }
+
+    function updateCharCount() {
+      const len = document.getElementById('queryInput').value.length;
+      document.getElementById('charCount').innerText = `${len} ký tự`;
+    }
+
+    document.getElementById('queryInput').addEventListener('input', () => {
+      updateCharCount();
+      selectedExpectedAnswer = "";
+    });
+
+    async function executeRAG() {
+      const input = document.getElementById('queryInput');
+      const question = input.value.trim();
+      if (!question) {
+        input.focus();
+        return;
+      }
+
+      const topK = parseInt(document.getElementById('topKSlider').value, 10);
+      const btn = document.getElementById('btnSubmit');
+      const btnText = document.getElementById('btnSubmitText');
+      const spinner = document.getElementById('btnSubmitSpinner');
+
+      btn.disabled = true;
+      btnText.innerText = "Đang truy xuất & sinh...";
+      spinner.style.display = "inline-block";
+
+      try {
+        const payload = {
+          question: question,
+          top_k: topK,
+          expected_answer: selectedExpectedAnswer || null
+        };
+
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status}`);
+        }
+
+        const data = await res.json();
+        renderAnswer(data);
+      } catch (err) {
+        alert("Lỗi khi gọi API: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = "Truy xuất & Trả lời (RAG)";
+        spinner.style.display = "none";
+      }
+    }
+
+    function renderAnswer(data) {
+      const answerBox = document.getElementById('answerContent');
+      answerBox.classList.remove('empty');
+      answerBox.innerText = data.actual_answer;
+
+      document.getElementById('metaModel').innerText = `Model: ${data.model}`;
+      document.getElementById('metaLatency').innerText = `Thời gian: ${data.latency_ms} ms`;
+
+      // Render Eval Card if exists
+      const evalCard = document.getElementById('evalCard');
+      if (data.eval) {
+        evalCard.style.display = 'block';
+        const ev = data.eval;
+
+        const passBadge = document.getElementById('evalPassBadge');
+        passBadge.innerText = ev.passed ? "PASS" : "FAIL";
+        passBadge.className = `badge ${ev.passed ? 'badge-pass' : 'badge-fail'}`;
+
+        const failTag = document.getElementById('evalFailureTag');
+        if (ev.failure_type) {
+          failTag.innerText = ev.failure_type.toUpperCase();
+          failTag.style.display = 'inline-block';
+        } else {
+          failTag.style.display = 'none';
+        }
+
+        document.getElementById('evalMatchedId').innerText = ev.matched_id || 'Custom Query';
+        document.getElementById('gaugeRecall').innerText = ev.context_recall.toFixed(2);
+        document.getElementById('gaugePrecision').innerText = ev.context_precision.toFixed(2);
+        document.getElementById('gaugeFaith').innerText = ev.faithfulness.toFixed(2);
+        document.getElementById('gaugeRel').innerText = ev.relevance.toFixed(2);
+        document.getElementById('gaugeComp').innerText = ev.completeness.toFixed(2);
+        document.getElementById('gaugeOverall').innerText = ev.overall_score.toFixed(2);
+      } else {
+        evalCard.style.display = 'none';
+      }
+
+      // Render Chunks
+      const chunksContainer = document.getElementById('chunksContainer');
+      chunksContainer.innerHTML = '';
+
+      if (data.retrieved_chunks && data.retrieved_chunks.length > 0) {
+        data.retrieved_chunks.forEach((chunk, idx) => {
+          const card = document.createElement('div');
+          card.className = 'chunk-card';
+          card.innerHTML = `
+            <div class="chunk-header" onclick="toggleChunk(this)">
+              <div class="chunk-doc">
+                <span class="rank-pill">#${idx + 1}</span>
+                <span style="font-weight:600; color:#fff;">${chunk.source_doc}</span>
+                <span style="color:var(--text-dim);">•</span>
+                <span style="color:var(--text-muted);">${chunk.title}</span>
+              </div>
+              <span class="bm25-score">BM25: ${chunk.score}</span>
+            </div>
+            <div class="chunk-body show">${escapeHtml(chunk.text)}</div>
+          `;
+          chunksContainer.appendChild(card);
+        });
+      } else {
+        chunksContainer.innerHTML = '<div style="color:var(--text-dim); padding:0.5rem;">Không tìm thấy chunk nào phù hợp.</div>';
+      }
+    }
+
+    function toggleChunk(headerEl) {
+      const body = headerEl.nextElementSibling;
+      body.classList.toggle('show');
+    }
+
+    // Benchmark Loading & Filtering
+    async function loadBenchmark() {
+      try {
+        const res = await fetch('/api/benchmark');
+        benchmarkData = await res.json();
+
+        // Update KPIs
+        const s = benchmarkData.summary;
+        if (s) {
+          document.getElementById('kpiPassRate').innerText = `${((s.pass_rate || 0) * 100).toFixed(1)}%`;
+          document.getElementById('kpiPassCount').innerText = `${s.passed} / ${s.total} Test Cases Đạt Chuẩn`;
+          document.getElementById('kpiRecall').innerText = `${((s.avg_context_recall || 0) * 100).toFixed(1)}%`;
+          document.getElementById('kpiPrecision').innerText = `${((s.avg_context_precision || 0) * 100).toFixed(1)}%`;
+          document.getElementById('kpiCompleteness').innerText = `${((s.avg_completeness || 0) * 100).toFixed(1)}%`;
+          document.getElementById('kpiFaithfulness').innerText = `${((s.avg_faithfulness || 0) * 100).toFixed(1)}%`;
+          document.getElementById('kpiRelevance').innerText = `${((s.avg_relevance || 0) * 100).toFixed(1)}%`;
+        }
+
+        renderBenchmarkTable(benchmarkData.results || []);
+      } catch (err) {
+        console.error("Lỗi nạp benchmark:", err);
+      }
+    }
+
+    function renderBenchmarkTable(results) {
+      const tbody = document.getElementById('benchmarkTableBody');
+      tbody.innerHTML = '';
+
+      if (!results || results.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding: 2rem;">Không tìm thấy dữ liệu.</td></tr>';
+        return;
+      }
+
+      results.forEach(row => {
+        const tr = document.createElement('tr');
+
+        const diffClass = `badge-${row.difficulty}`;
+        const passClass = row.passed ? 'badge-pass' : 'badge-fail';
+        const passText = row.passed ? 'PASS' : 'FAIL';
+
+        tr.innerHTML = `
+          <td style="font-family: var(--font-mono); font-weight:600; color:var(--cyan);">${row.id}</td>
+          <td><span class="badge ${diffClass}">${row.difficulty}</span></td>
+          <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(row.question)}">
+            ${escapeHtml(row.question)}
+          </td>
+          <td style="font-family: var(--font-mono);">${(row.context_recall ?? 0).toFixed(2)}</td>
+          <td style="font-family: var(--font-mono);">${(row.context_precision ?? 0).toFixed(2)}</td>
+          <td style="font-family: var(--font-mono);">${(row.faithfulness ?? 0).toFixed(2)}</td>
+          <td style="font-family: var(--font-mono);">${(row.relevance ?? 0).toFixed(2)}</td>
+          <td style="font-family: var(--font-mono);">${(row.completeness ?? 0).toFixed(2)}</td>
+          <td style="font-family: var(--font-mono); font-weight: 700;">${(row.overall ?? 0).toFixed(2)}</td>
+          <td><span class="badge ${passClass}">${passText}</span></td>
+          <td><button class="btn-detail" onclick="openDetailModal('${row.id}')">Chi tiết</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function applyFilters() {
+      if (!benchmarkData || !benchmarkData.results) return;
+      const search = document.getElementById('tableSearch').value.toLowerCase().trim();
+      const diff = document.getElementById('filterDifficulty').value.toLowerCase();
+      const status = document.getElementById('filterStatus').value.toLowerCase();
+
+      const filtered = benchmarkData.results.filter(item => {
+        const matchSearch = !search || item.id.toLowerCase().includes(search) || item.question.toLowerCase().includes(search);
+        const matchDiff = diff === 'all' || item.difficulty.toLowerCase() === diff;
+        const matchStatus = status === 'all' || (status === 'passed' && item.passed) || (status === 'failed' && !item.passed);
+        return matchSearch && matchDiff && matchStatus;
+      });
+
+      renderBenchmarkTable(filtered);
+    }
+
+    function openDetailModal(id) {
+      if (!benchmarkData || !benchmarkData.results) return;
+      const item = benchmarkData.results.find(r => r.id === id);
+      if (!item) return;
+
+      document.getElementById('mId').innerText = item.id;
+      const diffBadge = document.getElementById('mDifficulty');
+      diffBadge.innerText = item.difficulty.toUpperCase();
+      diffBadge.className = `badge badge-${item.difficulty}`;
+
+      const statusBadge = document.getElementById('mStatus');
+      statusBadge.innerText = item.passed ? 'PASSED' : 'FAILED';
+      statusBadge.className = `badge ${item.passed ? 'badge-pass' : 'badge-fail'}`;
+
+      document.getElementById('mQuestion').innerText = item.question;
+      document.getElementById('mExpected').innerText = item.expected_answer || 'Không có';
+      document.getElementById('mActual').innerText = item.actual_answer || 'Không có';
+
+      document.getElementById('mRecall').innerText = (item.context_recall ?? 0).toFixed(2);
+      document.getElementById('mPrecision').innerText = (item.context_precision ?? 0).toFixed(2);
+      document.getElementById('mFaith').innerText = (item.faithfulness ?? 0).toFixed(2);
+      document.getElementById('mRel').innerText = (item.relevance ?? 0).toFixed(2);
+      document.getElementById('mComp').innerText = (item.completeness ?? 0).toFixed(2);
+      document.getElementById('mOverall').innerText = (item.overall ?? 0).toFixed(2);
+
+      document.getElementById('detailModal').classList.add('show');
+    }
+
+    function closeModal(e) {
+      if (e.target.id === 'detailModal') {
+        closeModalDirect();
+      }
+    }
+
+    function closeModalDirect() {
+      document.getElementById('detailModal').classList.remove('show');
+    }
+
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      if (tabId === 'chat') {
+        document.getElementById('tabBtnChat').classList.add('active');
+        document.getElementById('tabChat').classList.add('active');
+      } else if (tabId === 'benchmark') {
+        document.getElementById('tabBtnBenchmark').classList.add('active');
+        document.getElementById('tabBenchmark').classList.add('active');
+      } else if (tabId === 'whys') {
+        document.getElementById('tabBtnWhys').classList.add('active');
+        document.getElementById('tabWhys').classList.add('active');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>

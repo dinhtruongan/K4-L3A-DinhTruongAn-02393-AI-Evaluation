@@ -50,6 +50,8 @@ Chi tiết hướng dẫn theo hệ điều hành và xử lý lỗi: xem [`guid
 
 Mặc định `LLM_PROVIDER=openai` dùng `OPENAI_API_KEY` và `OPENAI_MODEL`. Để dùng Gemini, đặt `LLM_PROVIDER=gemini`, điền `GEMINI_API_KEY` và chọn `GEMINI_MODEL` trong `.env`. Không cần đổi tên hay xóa các biến OpenAI hiện có. Nếu không có key, generator chạy offline và artifact ghi `provider=offline`; lỗi API khi đã cấu hình key sẽ dừng run để tránh gắn nhãn model sai.
 
+Giao diện web: cài dependencies rồi chạy `python web_app.py`, sau đó mở `http://127.0.0.1:8000`. Dashboard đọc artifact benchmark đã lưu; chat trực tiếp dùng model được cấu hình trong `.env`.
+
 ---
 
 ## Mục tiêu
