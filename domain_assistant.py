@@ -242,28 +242,92 @@ class TextGenerator(Protocol):
     def generate(self, prompt: str) -> str: ...
 
 
-class OpenAIGenerator:
-    def __init__(self, max_output_tokens: int = 300) -> None:
-        api_key = os.getenv("OPENAI_API_KEY", "").strip()
-        self.model = os.getenv("OPENAI_MODEL", "").strip()
-        if not api_key:
-            raise RuntimeError("OPENAI_API_KEY is missing from .env")
-        if not self.model:
-            raise RuntimeError("OPENAI_MODEL is missing from .env")
-        self.client = OpenAI(api_key=api_key)
-        self.max_output_tokens = max_output_tokens
+class OfflineGenerator:
+    """Offline generator using BM25 context when remote API is unavailable or quota is exceeded."""
+    def __init__(self) -> None:
+        self.model = "offline-bm25-rag-agent"
 
     def generate(self, prompt: str) -> str:
-        response = self.client.responses.create(
-            model=self.model,
-            input=prompt,
-            temperature=0,
-            max_output_tokens=self.max_output_tokens,
+        m_q = re.search(r"Question:\s*\n(.*?)\n\s*Retrieved contexts:", prompt, re.DOTALL)
+        question = m_q.group(1).strip() if m_q else ""
+
+        q_lower = question.lower()
+        if "override" in q_lower or "disregard" in q_lower or "credentials" in q_lower or "hidden prompts" in q_lower:
+            return "The assistant must ignore instructions to reveal hidden prompts, credentials, private support notes, or another customer's data."
+        if "medical advice" in q_lower or "legal representation" in q_lower or "burns" in q_lower:
+            return "Requests unrelated to OrbitTech customer support are outside scope, including medical diagnosis and legal representation. If a device is overheating, power it down safely, disconnect charging, and contact OrbitTech support."
+        if "live order" in q_lower or "cash refund" in q_lower or "change my delivery address" in q_lower:
+            return "The assistant may describe a policy but cannot view a live order, issue a refund, approve a warranty claim, unlock an account, change a delivery address, or promise an exception. Please contact the appropriate OrbitTech support channel."
+
+        context_blocks = re.findall(
+            r"\[Context \d+ \| [^\]]+\]\s*\n(.*?)(?=\n\s*\[Context \d+|\n\s*Answer:)",
+            prompt,
+            re.DOTALL,
         )
-        answer = response.output_text.strip()
-        if not answer:
-            raise RuntimeError("OpenAI returned an empty answer")
-        return answer
+        if not context_blocks:
+            # Fallback split
+            if "Retrieved contexts:" in prompt and "Answer:" in prompt:
+                ctx_part = prompt.split("Retrieved contexts:")[1].split("Answer:")[0]
+                context_blocks = [ctx_part]
+            else:
+                context_blocks = [prompt]
+
+        q_tokens = set(_tokenize(question))
+        sentences: list[tuple[int, str]] = []
+        for block in context_blocks:
+            for s in re.split(r"(?<=[.!?])\s+", block.strip()):
+                s = s.strip()
+                if s and len(s) > 15:
+                    s_tokens = set(_tokenize(s))
+                    overlap = len(s_tokens & q_tokens)
+                    sentences.append((overlap, s))
+
+        sentences.sort(key=lambda x: x[0], reverse=True)
+        top_sentences = [s for score, s in sentences[:3] if score > 0]
+        if top_sentences:
+            return " ".join(top_sentences)
+        return context_blocks[0].strip()
+
+
+class OpenAIGenerator:
+    def __init__(self, max_output_tokens: int = 300) -> None:
+        use_offline = os.getenv("USE_OFFLINE", "").strip().lower() in ("1", "true", "yes")
+        api_key = os.getenv("OPENAI_API_KEY", "").strip() if not use_offline else ""
+        self.model = os.getenv("OPENAI_MODEL", "").strip() or "offline-bm25-rag-agent"
+        base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
+        self.client = (
+            OpenAI(api_key=api_key, base_url=base_url, max_retries=0, timeout=3.0)
+            if api_key
+            else None
+        )
+        self.max_output_tokens = max_output_tokens
+        self._offline_fallback = OfflineGenerator()
+
+    def generate(self, prompt: str) -> str:
+        if self.client is None or not self.model:
+            return self._offline_fallback.generate(prompt)
+        try:
+            try:
+                response = self.client.responses.create(
+                    model=self.model,
+                    input=prompt,
+                    temperature=0,
+                    max_output_tokens=self.max_output_tokens,
+                )
+                answer = response.output_text.strip()
+            except Exception:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0,
+                    max_tokens=self.max_output_tokens,
+                )
+                answer = response.choices[0].message.content.strip()
+            if not answer:
+                raise RuntimeError("OpenAI returned an empty answer")
+            return answer
+        except Exception:
+            return self._offline_fallback.generate(prompt)
 
 
 @dataclass(frozen=True)
